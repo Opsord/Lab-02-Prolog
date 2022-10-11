@@ -1,6 +1,6 @@
 % TDA de operaciones varias
 %--------------------------------------------
-:- module(operaciones, [len/2, reverse/2]).
+%:- module(operaciones, [len/2, reverse/2]).
 %--------------------------------------------
 len(Lista,Resultado):-
     contar(Lista,Resultado).

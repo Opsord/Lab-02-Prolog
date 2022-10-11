@@ -1,6 +1,6 @@
 %---------------------------------------------------------------
 % Creacion de modulo pixbit
-:- module(pixbit/1, [pixbit/1]).
+%:- module(pixbitd, [pixbitd/5]).
 %---------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]

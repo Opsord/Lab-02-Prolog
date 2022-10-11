@@ -1,0 +1,9 @@
+Banco de consultas para laboratorio de prolog
+(Posible futuro script de pruebas)
+
+% Definicion de imaen de prueba (I1)
+pixrgbd( 0, 0, 10, 10, 10, 10, P1),
+pixrgbd( 0, 1, 20, 20, 20, 20, P2),
+pixrgbd( 1, 0, 30, 30, 30, 30, P3),
+pixrgbd( 1, 1, 40, 40, 40, 40, P4),
+image( 2, 2, [P1, P2, P3, P4], I1).

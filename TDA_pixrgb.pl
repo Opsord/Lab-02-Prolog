@@ -8,5 +8,5 @@ pixrgb(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
     integer(G),
     G >= 0 ; G =< 255,
     integer(B),
-    B => 0 ; B =< 255,
+    B >= 0 ; B =< 255,
     integer(Depth).

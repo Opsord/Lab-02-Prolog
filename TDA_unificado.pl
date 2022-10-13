@@ -1,4 +1,13 @@
 %-----------------------------------------------------------------
+% Operaciones simples
+
+% Calcular el largo de una lista
+contar([],0).
+contar([_|Resto], N) :- 
+    contar(Resto, Acumulador),
+    N is Acumulador + 1.
+
+%-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]
 pixbitd(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
@@ -67,3 +76,8 @@ pixelsAreHexmap([Pixhexd | Cdr]) :-
     string(ContHex),
     pixelsAreHexmap(Cdr).
 % ----------------------------------------------------------------
+% Verificador de comprimido
+imageIsCompressed(Image):-
+    image(X, Y, Pixeles, Image),
+    contar(Pixeles, Largo),
+    not(Largo  =:= (X*Y)).

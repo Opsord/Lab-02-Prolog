@@ -1,8 +1,3 @@
-
-
-
-
-
 %-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]
@@ -15,7 +10,7 @@ pixbitd(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
 % ----------------------------------------------------------------
 % Pixrgb
 % [PosX, PosY, R, G, B, Depth]
-pixrgb(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
+pixrgbd(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
     integer(PosX),
     integer(PosY),
     integer(R),
@@ -34,32 +29,41 @@ pixhex(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
     string(Hex),
     integer(Depth).
 % ----------------------------------------------------------------
-
 % Constructor de imagen
 image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
-
+% ----------------------------------------------------------------
 % Verificador Bitmap
-imageIsBitmap([]).
-imageIsBitmap([Pixbitd | Cdr]) :-
-    pixbitd(_, _, ContBit, _, Pixbitd),
-    ContBit = 0 ; ContBit = 1,
-    imageIsBitmap(Cdr).
+imageIsBitmap(Image):-
+    image(_,_,Pixeles,Image),
+    pixelsAreBitmap(Pixeles).
 
+pixelsAreBitmap([]).
+pixelsAreBitmap([Pixbitd | Cdr]) :-
+    pixbitd(_, _, Bit, _, Pixbitd),
+    (Bit == 0 ; Bit == 1),
+    pixelsAreBitmap(Cdr).
+% ----------------------------------------------------------------
 % Verificador Pixmap
-imageIsPixmap([]).
-imageIsPixmap([Pixrgbd | Cdr]) :-
-    pixrgbd(_, _, R, G, B, _, Pixrgbd),
-    integer(R),
-    R >= 0 ; R =< 255,
-    integer(G),
-    G >= 0 ; G =< 255,
-    integer(B),
-    B >= 0 ; B =< 255,
-    imageIsPixmap(Cdr).
+imageIsPixmap(Image):-
+    image(_,_,Pixeles,Image),
+    pixelsArePixmap(Pixeles).
 
+pixelsArePixmap([]).
+pixelsArePixmap([Pixrgbd | Cdr]):-
+    pixrgbd(_, _, R, G, B, _, Pixrgbd),
+    R >= 0 , R =< 255,
+    G >= 0 , G =< 255,
+    B >= 0 , B =< 255,
+    pixelsArePixmap(Cdr).
+% ----------------------------------------------------------------
 % Verificador Hexmap
-imageIsHexmap([]).
-imageIsHexmap([Pixhexd | Cdr]) :-
-    pixbitd(_, _, ContHex, _, Pixhexd),
+imageIsHexmap(Image):-
+    image(_,_,Pixeles,Image),
+    pixelsAreHexmap(Pixeles).
+
+pixelsAreHexmap([]).
+pixelsAreHexmap([Pixhexd | Cdr]) :-
+    pixhexd(_, _, ContHex, _, Pixhexd),
     string(ContHex),
-    imageIsHexmap(Cdr).
+    pixelsAreHexmap(Cdr).
+% ----------------------------------------------------------------

@@ -1,9 +1,36 @@
 Banco de consultas para laboratorio de prolog
 (Posible futuro script de pruebas)
 
-% Definicion de imaen de prueba (I1)
+
+% Definicion de un BITMAP de prueba (I)
+pixbitd( 0, 0, 1, 10, PA), 
+pixbitd( 0, 1, 0, 20, PB),
+pixbitd( 1, 0, 0, 30, PC), 
+pixbitd( 1, 1, 1, 4, PD), 
+image( 2, 2, [PA, PB, PC, PD], I).
+
+Verificador:
+imageIsBitmap(I).
+
+
+% Definicion de un PIXMAP de prueba (I)
 pixrgbd( 0, 0, 10, 10, 10, 10, P1),
 pixrgbd( 0, 1, 20, 20, 20, 20, P2),
 pixrgbd( 1, 0, 30, 30, 30, 30, P3),
 pixrgbd( 1, 1, 40, 40, 40, 40, P4),
-image( 2, 2, [P1, P2, P3, P4], I1).
+image( 2, 2, [P1, P2, P3, P4], I).
+
+Verificador:
+imageIsPixmap(I).
+
+% Definicion de un HEXMAP de prueba (I)
+pixhexd( 0, 0, 10, 10, 10, 10, P1),
+pixhexd( 0, 1, 20, 20, 20, 20, P2),
+pixhexd( 1, 0, 30, 30, 30, 30, P3),
+pixhexd( 1, 1, 40, 40, 40, 40, P4),
+image( 2, 2, [P1, P2, P3, P4], I).
+
+Verificador:
+imageIsHexmap(I).
+
+

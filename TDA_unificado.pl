@@ -176,3 +176,32 @@ verificadorCrop(Pixel, X1, Y1, X2, Y2):-
     X2 >= PosX,
     Y2 >= PosY.
 % ----------------------------------------------------------------
+% Conversor RGB a HEX
+imageRGBToHex(Image, NewImage):-
+    image(X, Y, Pixeles, Image),
+    conversorRGBaHEX(Pixeles, [], ListPixOut),
+    image(X,Y, ListPixOut, NewImage).
+
+conversorRGBaHEX([], ListaCache, ListaCache).
+conversorRGBaHEX([PixRGB|CDR], ListaCache, ListPixOut):-
+    conversorIndividualRGBaHEX(PixRGB, PixHEX),
+    insertarPrincipio(PixHEX, ListaCache, ListaCache2),
+    conversorRGBaHEX(CDR, ListaCache2, ListPixOut).
+
+% Conversor de argumento RGB a HEX
+conversorIndividualRGBaHEX(PixRGB,PixHEX):-
+    pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
+    rgbAhex(R,HexR),
+    rgbAhex(G,HexG),
+    rgbAhex(B,HexB),
+    atom_concat(HexR, HexG, HEXCache),
+    atom_concat(HEXCache, HexB, HEX),
+    pixhexd(PosX, PosY, HEX, Depth, PixHEX).
+% Conversor de numero a HEX
+rgbAhex(Num,Hex):-
+    ParteEntera is truncate(Num/16),
+    ParteDec is truncate((Num/16 - ParteEntera)*16),
+    index(ParteEntera, HEX1, ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","F"]),
+    index(ParteDec, HEX2, ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","F"]),
+    atom_concat(HEX1, HEX2, Hex).
+% ----------------------------------------------------------------

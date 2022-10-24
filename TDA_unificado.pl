@@ -10,6 +10,21 @@ contar([_|Resto], N) :-
 % Insertar un elemento al principio de una lista
 insertarPrincipio(Elemento, [], [Elemento] ).
 insertarPrincipio(Elemento, Lista, [Elemento|Lista]).
+
+% Unir 2 elementos
+unir(Elemento, Elemento).
+
+
+% Contar la frecuencia de un elemento en una lista
+frecuenciaElementoEnLista(_, [], Frecuencia, Resultado):-
+    unir(Frecuencia, Resultado).
+frecuenciaElementoEnLista(Elemento, [CAR|CDR], Frecuencia, Resultado):-
+    %If
+    (Elemento == CAR -> 
+    (NewFrecuencia is Frecuencia + 1, frecuenciaElementoEnLista(Elemento, CDR, NewFrecuencia, Resultado))
+    ;
+    %Else
+    frecuenciaElementoEnLista(Elemento, CDR, Frecuencia, Resultado)).
 %-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]

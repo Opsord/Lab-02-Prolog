@@ -3,8 +3,8 @@
 
 % Calcular el largo de una lista
 contar([],0).
-contar([_|Resto], N) :- 
-    contar(Resto, Acumulador),
+contar([_|CDR], N) :- 
+    contar(CDR, Acumulador),
     N is Acumulador + 1.
 
 % Insertar un elemento al principio de una lista
@@ -90,8 +90,8 @@ imageIsHexmap(Image):-
 
 pixelsAreHexmap([]).
 pixelsAreHexmap([Pixhexd | CDR]) :-
-    pixhexd(_, _, ContHex, _, Pixhexd),
-    string(ContHex),
+    pixhexd(_, _, ContenidoHEX, _, Pixhexd),
+    string(ContenidoHEX),
     pixelsAreHexmap(CDR).
 % ----------------------------------------------------------------
 % Verificador de comprimido
@@ -220,3 +220,35 @@ rgbAhex(Num,Hex):-
     index(ParteDec, HEX2, ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","F"]),
     atom_concat(HEX1, HEX2, Hex).
 % ----------------------------------------------------------------
+% Histograma de una imagen
+imageToHistogram(Image, Histograma):-
+    image(_, _, Pixeles, Image),
+    getContenidoPix(Pixeles, [], ContenidoPix),
+    getAparicionesPix(Pixeles, [], ListaApariciones),
+    histogramador(ContenidoPix, ListaApariciones, [], Histograma).
+
+histogramador([], _, ListaCache, ListaCache).
+histogramador([PixelEvaluado|CDR], ListaApariciones, ListaCache, Histograma):-
+    %getContenidoPix(Pixeles, [], [CAR|CDR]),
+    %getAparicionesPix(Pixeles, [], ListaApariciones),
+    frecuenciaElementoEnLista(PixelEvaluado, ListaApariciones, 0, Repeticiones),
+    insertarPrincipio([PixelEvaluado,Repeticiones], ListaCache, ListaCache2),
+    histogramador(CDR, ListaApariciones, ListaCache2, Histograma).
+% Lista con los pixeles filtrado
+getContenidoPix([], ListaCache, ListaCache).
+getContenidoPix([Pixel|CDR], ListaCache, ListaContenido):-
+    %Funciona con PIXBIT (por ahora)
+    pixbitd(_, _, Bit, _, Pixel),
+    %If
+    (not(member(Bit, ListaCache)) ->  
+    (insertarPrincipio(Bit, ListaCache, ListaCache2), getContenidoPix(CDR, ListaCache2, ListaContenido))
+    ;   
+    %Else
+    getContenidoPix(CDR, ListaCache, ListaContenido)).
+% Lista con todas las apariciones de los pixeles
+getAparicionesPix([], ListaCache, ListaCache).
+getAparicionesPix([Pixel|CDR], ListaCache, ListaContenido):-
+    %Funciona con PIXBIT (por ahora)
+    pixbitd(_, _, Bit, _, Pixel), 
+    insertarPrincipio(Bit, ListaCache, ListaCache2),
+    getAparicionesPix(CDR, ListaCache2, ListaContenido).

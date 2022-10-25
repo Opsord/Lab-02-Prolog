@@ -3,21 +3,28 @@
 
 % Calcular el largo de una lista
 contar([],0).
-contar([_|CDR], N) :- 
-    contar(CDR, Acumulador),
+contar([_|Resto], N) :- 
+    contar(Resto, Acumulador),
     N is Acumulador + 1.
 
 % Insertar un elemento al principio de una lista
 insertarPrincipio(Elemento, [], [Elemento] ).
 insertarPrincipio(Elemento, Lista, [Elemento|Lista]).
 
+% Index por contador
+index(0, CAR, [CAR|_]).
+index(Contador, Elemento, [_|CDR]):-
+    NewContador is Contador - 1,
+    index(NewContador, Elemento, CDR).
+    
+
 % Unir 2 elementos
 unir(Elemento, Elemento).
-
 
 % Contar la frecuencia de un elemento en una lista
 frecuenciaElementoEnLista(_, [], Frecuencia, Resultado):-
     unir(Frecuencia, Resultado).
+%frecuenciaElementoEnLista(Elemento, ListaElementos, Frecuencia, Resultado)
 frecuenciaElementoEnLista(Elemento, [CAR|CDR], Frecuencia, Resultado):-
     %If
     (Elemento == CAR -> 
@@ -32,7 +39,7 @@ pixbitd(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
     integer(PosX),
     integer(PosY),
     integer(Bit),
-    Bit == 0 ; Bit == 1,
+    (Bit == 0 ; Bit == 1),
     integer(Depth).
 % ----------------------------------------------------------------
 % Pixrgb
@@ -41,16 +48,16 @@ pixrgbd(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
     integer(PosX),
     integer(PosY),
     integer(R),
-    R >= 0 ; R =< 255,
+    (R >= 0 , R =< 255),
     integer(G),
-    G >= 0 ; G =< 255,
+    (G >= 0 , G =< 255),
     integer(B),
-    B >= 0 ; B =< 255,
+    (B >= 0 , B =< 255),
     integer(Depth).
 % ----------------------------------------------------------------
 % Pixhex
 % [PosX, PosY, Hex, Depth]
-pixhex(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
+pixhexd(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
     integer(PosX),
     integer(PosY),
     string(Hex),
@@ -90,8 +97,8 @@ imageIsHexmap(Image):-
 
 pixelsAreHexmap([]).
 pixelsAreHexmap([Pixhexd | CDR]) :-
-    pixhexd(_, _, ContenidoHEX, _, Pixhexd),
-    string(ContenidoHEX),
+    pixhexd(_, _, ContHex, _, Pixhexd),
+    string(ContHex),
     pixelsAreHexmap(CDR).
 % ----------------------------------------------------------------
 % Verificador de comprimido
@@ -118,7 +125,8 @@ flipHPixeles(MaxPosX, [Pix|CDR], ListaCacheInicial, ListPixOut):-
     %Se inserta el PixOut en una lista cache
     insertarPrincipio(PixOut, ListaCacheInicial, ListaCache02),
     %Se llama recursivamente al flipH
-    flipHPixeles(MaxPosX, CDR, ListaCache02, ListPixOut).
+    flipHPixeles(MaxPosX, CDR, ListaCache02, ListPixOut),
+    !.
 
 % Flips inviduales por tipo de pixel
 flipH_BIT(PixIn, MaxPosXImage, PixOut):-
@@ -152,7 +160,8 @@ flipVPixeles(MaxPosY, [Pix|CDR], ListaCacheInicial, ListPixOut):-
     %Se inserta el PixOut en una lista cache
     insertarPrincipio(PixOut, ListaCacheInicial, ListaCache02),
     %Se llama recursivamente al flipV
-    flipVPixeles(MaxPosY, CDR, ListaCache02, ListPixOut).
+    flipVPixeles(MaxPosY, CDR, ListaCache02, ListPixOut),
+    !.
 
 % Flips inviduales por tipo de pixel
 flipV_BIT(PixIn, MaxPosYImage, PixOut):-
@@ -182,7 +191,8 @@ cropPix([Pixel|CDR], X1, Y1, X2, Y2, ListaCache, ListPixOut):-
     (verificadorCrop(Pixel, X1, Y1, X2, Y2)
     ->(insertarPrincipio(Pixel, ListaCache, ListaCache2),
           cropPix(CDR, X1, Y1, X2, Y2, ListaCache2, ListPixOut));
-    cropPix(CDR, X1, Y1, X2, Y2, ListaCache, ListPixOut)).
+    cropPix(CDR, X1, Y1, X2, Y2, ListaCache, ListPixOut)),
+    !.
 % Verificador de pixel individual
 verificadorCrop(Pixel, X1, Y1, X2, Y2):-
     pixbitd(PosX, PosY, _, _, Pixel),
@@ -195,14 +205,14 @@ verificadorCrop(Pixel, X1, Y1, X2, Y2):-
 imageRGBToHex(Image, NewImage):-
     image(X, Y, Pixeles, Image),
     conversorRGBaHEX(Pixeles, [], ListPixOut),
-    image(X,Y, ListPixOut, NewImage).
+    image(X, Y, ListPixOut, NewImage).
 
 conversorRGBaHEX([], ListaCache, ListaCache).
 conversorRGBaHEX([PixRGB|CDR], ListaCache, ListPixOut):-
     conversorIndividualRGBaHEX(PixRGB, PixHEX),
     insertarPrincipio(PixHEX, ListaCache, ListaCache2),
-    conversorRGBaHEX(CDR, ListaCache2, ListPixOut).
-
+    conversorRGBaHEX(CDR, ListaCache2, ListPixOut),
+    !.
 % Conversor de argumento RGB a HEX
 conversorIndividualRGBaHEX(PixRGB,PixHEX):-
     pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
@@ -211,7 +221,9 @@ conversorIndividualRGBaHEX(PixRGB,PixHEX):-
     rgbAhex(B,HexB),
     atom_concat(HexR, HexG, HEXCache),
     atom_concat(HEXCache, HexB, HEX),
-    pixhexd(PosX, PosY, HEX, Depth, PixHEX).
+    atom_concat("#", HEX, HexPreFinal),
+    atom_string(HexPreFinal, HexFinal),
+    pixhexd(PosX, PosY, HexFinal, Depth, PixHEX).
 % Conversor de numero a HEX
 rgbAhex(Num,Hex):-
     ParteEntera is truncate(Num/16),
@@ -225,7 +237,8 @@ imageToHistogram(Image, Histograma):-
     image(_, _, Pixeles, Image),
     getContenidoPix(Pixeles, [], ContenidoPix),
     getAparicionesPix(Pixeles, [], ListaApariciones),
-    histogramador(ContenidoPix, ListaApariciones, [], Histograma).
+    histogramador(ContenidoPix, ListaApariciones, [], Histograma),
+    !.
 
 histogramador([], _, ListaCache, ListaCache).
 histogramador([PixelEvaluado|CDR], ListaApariciones, ListaCache, Histograma):-
@@ -233,7 +246,8 @@ histogramador([PixelEvaluado|CDR], ListaApariciones, ListaCache, Histograma):-
     %getAparicionesPix(Pixeles, [], ListaApariciones),
     frecuenciaElementoEnLista(PixelEvaluado, ListaApariciones, 0, Repeticiones),
     insertarPrincipio([PixelEvaluado,Repeticiones], ListaCache, ListaCache2),
-    histogramador(CDR, ListaApariciones, ListaCache2, Histograma).
+    histogramador(CDR, ListaApariciones, ListaCache2, Histograma),
+    !.
 % Lista con los pixeles filtrado
 getContenidoPix([], ListaCache, ListaCache).
 getContenidoPix([Pixel|CDR], ListaCache, ListaContenido):-
@@ -266,4 +280,5 @@ rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
     NewPosY is Area - PosX,
     pixbitd(PosY, NewPosY, Bit, Depth, NewPixel),
     insertarPrincipio(NewPixel, ListaCache, ListaCache2),
-    rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area).
+    rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area),
+    !.

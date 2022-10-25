@@ -252,3 +252,18 @@ getAparicionesPix([Pixel|CDR], ListaCache, ListaContenido):-
     pixbitd(_, _, Bit, _, Pixel), 
     insertarPrincipio(Bit, ListaCache, ListaCache2),
     getAparicionesPix(CDR, ListaCache2, ListaContenido).
+% ----------------------------------------------------------------
+% Rotar una imagen en 90 grados de forma cartesiana en sentido horario
+imageRotate90(Image, NewImage):-
+    image(Largo, Ancho, Pixeles, Image),
+    Area is Largo*Ancho,
+    rotador90Pixeles(Pixeles, [], PixelesRotados, Area),
+    image(Largo, Ancho, PixelesRotados, NewImage).
+% Se sigue la formula (X,Y) -> (Y, (Area - X))'
+rotador90Pixeles([], ListaCache, ListaCache, _).
+rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
+    pixbitd(PosX, PosY, Bit, Depth, Pixel),
+    NewPosY is Area - PosX,
+    pixbitd(PosY, NewPosY, Bit, Depth, NewPixel),
+    insertarPrincipio(NewPixel, ListaCache, ListaCache2),
+    rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area).

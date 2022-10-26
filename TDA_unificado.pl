@@ -282,3 +282,29 @@ rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
     insertarPrincipio(NewPixel, ListaCache, ListaCache2),
     rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area),
     !.
+% ----------------------------------------------------------------
+% Formato de imagen comprimida
+imagenComprimida(Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades, [Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades]).
+% Metodo para ordenar el histograma y colocar primero la mayor frecuencia
+sortHistogram(Histogram, SortedHistogram):-
+    predsort(compareAvg, Histogram, SortedHistogram).
+compareAvg(X,  [_,A1], [_,A2]) :- 
+    compare(X, A2, A1).
+% Recursion interna para comprimir los pixeles
+comprimir([], _, ListaCache, ListaCache).
+comprimir([Pixel|CDR], PixelFrecuente, ListaCache, PixelesComprimidos):-
+    pixbitd(_,_,Bit,_,Pixel),
+    (Bit == PixelFrecuente ->
+    comprimir(CDR, PixelFrecuente, ListaCache, PixelesComprimidos)
+    ;   
+    (insertarPrincipio(Pixel, ListaCache, ListaCache2), comprimir(CDR, PixelFrecuente, ListaCache2, PixelesComprimidos))), !.
+% Parte principal de comprimir
+imageCompress(Image, ImagenComprimida):-
+    image(Largo, Ancho, Pixeles, Image),
+    %image(_, _, Pixeles, Image),
+    imageToHistogram(Image,Histogram),
+    %sortHistogram(Histogram, [[PixelFrecuente|FrecuenciaPix]|CDR]),
+    sortHistogram(Histogram, [[PixelFrecuente|FrecuenciaPix]|_]),
+    comprimir(Pixeles, PixelFrecuente, [], PixelesComprimidos),
+    imagenComprimida(Largo, Ancho, PixelesComprimidos, PixelFrecuente, FrecuenciaPix, ImagenComprimida).
+% ----------------------------------------------------------------

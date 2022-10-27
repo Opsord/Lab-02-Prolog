@@ -32,6 +32,30 @@ frecuenciaElementoEnLista(Elemento, [CAR|CDR], Frecuencia, Resultado):-
     ;
     %Else
     frecuenciaElementoEnLista(Elemento, CDR, Frecuencia, Resultado)).
+
+% Obtiene la posicion de culquier tipo de pixel
+getPosPix(Pixel, Posicion):-
+    (pixbitd(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
+    ;   
+    (pixrgbd(PosX, PosY, _, _, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
+    ;   
+    (pixhexd(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)))).
+
+% Obtiene el contenido de cualquier tipo de pixel
+getContenidoPix(Pixel, Contenido):-
+    (pixbitd(_, _, Bit, _, Pixel) ->  unir(Bit, Contenido)
+    ;   
+    (pixrgbd(_, _, R, G, B, _, Pixel) ->  unir([R,G,B], Contenido)
+    ;   
+    (pixhexd(_, _, Hex, _, Pixel) ->  unir(Hex, Contenido)))).
+
+% Obtiene la profunidad de cualqueir tipo de pixel
+getDepthPix(Pixel, Depth):-
+    pixbitd(_, _, _, Depth, Pixel)
+    ;   
+    pixrgbd(_, _, _, _, _, Depth, Pixel)
+    ;   
+    pixhexd(_, _, _, Depth, Pixel).
 %-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]
@@ -66,40 +90,46 @@ pixhexd(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
 % Constructor de imagen
 image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
 % ----------------------------------------------------------------
-% Verificador Bitmap
-imageIsBitmap(Image):-
-    image(_,_,Pixeles,Image),
-    pixelsAreBitmap(Pixeles).
-
+% Recursion interna del verificador
 pixelsAreBitmap([]).
 pixelsAreBitmap([Pixbitd | CDR]) :-
     pixbitd(_, _, Bit, _, Pixbitd),
     (Bit == 0 ; Bit == 1),
-    pixelsAreBitmap(CDR).
-% ----------------------------------------------------------------
-% Verificador Pixmap
-imageIsPixmap(Image):-
+    pixelsAreBitmap(CDR),
+    !.
+         
+% Verificador Bitmap
+imageIsBitmap(Image):-
     image(_,_,Pixeles,Image),
-    pixelsArePixmap(Pixeles).
-
+    pixelsAreBitmap(Pixeles).
+% ----------------------------------------------------------------
+% Recursion interna del verificador
 pixelsArePixmap([]).
 pixelsArePixmap([Pixrgbd | CDR]):-
     pixrgbd(_, _, R, G, B, _, Pixrgbd),
     R >= 0 , R =< 255,
     G >= 0 , G =< 255,
     B >= 0 , B =< 255,
-    pixelsArePixmap(CDR).
-% ----------------------------------------------------------------
-% Verificador Hexmap
-imageIsHexmap(Image):-
-    image(_,_,Pixeles,Image),
-    pixelsAreHexmap(Pixeles).
+    pixelsArePixmap(CDR), 
+    !.
 
+% Verificador Pixmap
+imageIsPixmap(Image):-
+    image(_,_,Pixeles,Image),
+    pixelsArePixmap(Pixeles).
+% ----------------------------------------------------------------
+% Recursion interna del verificador
 pixelsAreHexmap([]).
 pixelsAreHexmap([Pixhexd | CDR]) :-
     pixhexd(_, _, ContHex, _, Pixhexd),
     string(ContHex),
-    pixelsAreHexmap(CDR).
+    pixelsAreHexmap(CDR),
+    !.
+
+% Verificador Hexmap
+imageIsHexmap(Image):-
+    image(_,_,Pixeles,Image),
+    pixelsAreHexmap(Pixeles).
 % ----------------------------------------------------------------
 % Verificador de comprimido
 imageIsCompressed(Image):-
@@ -107,95 +137,75 @@ imageIsCompressed(Image):-
     contar(Pixeles, Largo),
     not(Largo  =:= (X*Y)).
 % ----------------------------------------------------------------
-% Invertir horizontalmente
-imageFlipH(Image, NewImage):-
-    image(X, Y, Pixeles, Image),
-    flipHPixeles(X, Pixeles, [], ListPixOut),
-    image(X, Y, ListPixOut, NewImage).
-
 % Caso base
 flipHPixeles(_, [], PixsBase, PixsBase).
 % Llamado recursivo
 flipHPixeles(MaxPosX, [Pix|CDR], ListaCacheInicial, ListPixOut):-
     %Se le aplica Flip al pixel individualmente
-    flipH_BIT(Pix, MaxPosX, PixOut),
-    %(flipH_BIT(Pix, MaxPosX, PixOut);
-    %flipH_RGB(Pix, MaxPosX, PixOut);
-    %flipH_HEX(Pix, MaxPosX, PixOut)),
+    flipH_Universal(Pix, MaxPosX, PixOut),
     %Se inserta el PixOut en una lista cache
     insertarPrincipio(PixOut, ListaCacheInicial, ListaCache02),
     %Se llama recursivamente al flipH
     flipHPixeles(MaxPosX, CDR, ListaCache02, ListPixOut),
     !.
+% Flip interno universal
+flipH_Universal(PixIn, MaxPosXImage, PixOut):-
+    getPosPix(PixIn, [PosX, PosY]),
+    getContenidoPix(PixIn, Contenido),
+    getDepthPix(PixIn, Depth),
+    NewPosX is abs(PosX - MaxPosXImage),
+    unir([NewPosX, PosY, Contenido, Depth], PixOut).
 
-% Flips inviduales por tipo de pixel
-flipH_BIT(PixIn, MaxPosXImage, PixOut):-
-    pixbitd(PosX, PosY, Bit, Depth, PixIn),
-    NewPosX is abs(PosX - MaxPosXImage),
-    pixbitd(NewPosX, PosY, Bit, Depth, PixOut).
-flipH_RGB(PixIn, MaxPosXImage, PixOut):-
-    pixrgbd(PosX, PosY, R, G, B, Depth, PixIn),
-    NewPosX is abs(PosX - MaxPosXImage),
-    pixrgbd(NewPosX, PosY, R, G, B, Depth, PixOut).
-flipH_HEX(PixIn, MaxPosXImage, PixOut):-
-    pixhexd(PosX, PosY, Hex, Depth, PixIn),
-    NewPosX is abs(PosX - MaxPosXImage),
-    pixhexd(NewPosX, PosY, Hex, Depth, PixOut).
-% ----------------------------------------------------------------
-% Invertir verticalmente
-imageFlipV(Image, NewImage):-
+% Invertir horizontalmente (Logica Principal)
+imageFlipH(Image, NewImage):-
     image(X, Y, Pixeles, Image),
-    flipVPixeles(Y, Pixeles, [], ListPixOut),
+    flipHPixeles(X, Pixeles, [], ListPixOut),
     image(X, Y, ListPixOut, NewImage).
-
+% ----------------------------------------------------------------
 % Caso base
 flipVPixeles(_, [], PixsBase, PixsBase).
 % Llamado recursivo
 flipVPixeles(MaxPosY, [Pix|CDR], ListaCacheInicial, ListPixOut):-
     %Se le aplica Flip al pixel individualmente
-    flipV_BIT(Pix, MaxPosY, PixOut),
-    %(flipV_BIT(Pix, MaxPosY, PixOut);
-    %flipV_RGB(Pix, MaxPosY, PixOut);
-    %flipV_HEX(Pix, MaxPosY, PixOut)),
+    flipV_Universal(Pix, MaxPosY, PixOut),
     %Se inserta el PixOut en una lista cache
     insertarPrincipio(PixOut, ListaCacheInicial, ListaCache02),
     %Se llama recursivamente al flipV
     flipVPixeles(MaxPosY, CDR, ListaCache02, ListPixOut),
     !.
 
-% Flips inviduales por tipo de pixel
-flipV_BIT(PixIn, MaxPosYImage, PixOut):-
-    pixbitd(PosX, PosY, Bit, Depth, PixIn),
-    NewPosY is abs(PosY - MaxPosYImage),
-    pixbitd(PosX, NewPosY, Bit, Depth, PixOut).
-flipV_RGB(PixIn, MaxPosYImage, PixOut):-
-    pixrgbd(PosX, PosY, R, G, B, Depth, PixIn),
-    NewPosY is abs(PosY - MaxPosYImage),
-    pixrgbd(PosX, NewPosY, R, G, B, Depth, PixOut).
-flipV_HEX(PixIn, MaxPosYImage, PixOut):-
-    pixhexd(PosX, PosY, Hex, Depth, PixIn),
-    NewPosY is abs(PosY - MaxPosYImage),
-    pixhexd(PosX, NewPosY, Hex, Depth, PixOut).
+% FlipV universal
+flipV_Universal(PixIn, MaxPosY, PixOut):-
+    getPosPix(PixIn, [PosX, PosY]),
+    getContenidoPix(PixIn, Contenido),
+    getDepthPix(PixIn, Depth),
+    NewPosY is abs(PosY - MaxPosY),
+    unir([PosX, NewPosY, Contenido, Depth], PixOut).
+
+% Invertir verticalmente
+imageFlipV(Image, NewImage):-
+    image(X, Y, Pixeles, Image),
+    flipVPixeles(Y, Pixeles, [], ListPixOut),
+    image(X, Y, ListPixOut, NewImage).
 % ----------------------------------------------------------------
 % Crop
 imageCrop(Image, X1, Y1, X2, Y2, NewImage):-
     image(X, Y, Pixeles, Image),
-    %Funcion interna que verifica los pixeles del cuadrante
     cropPix(Pixeles, X1, Y1, X2, Y2, [], ListPixOut),
     image(X, Y, ListPixOut, NewImage).
 
 % Caso base de la recursion
 cropPix([], _, _, _, _, ListaCache, ListaCache).
-% Funcion principal recursiva
+% Recursiva interna
 cropPix([Pixel|CDR], X1, Y1, X2, Y2, ListaCache, ListPixOut):-
-    (verificadorCrop(Pixel, X1, Y1, X2, Y2)
-    ->(insertarPrincipio(Pixel, ListaCache, ListaCache2),
-          cropPix(CDR, X1, Y1, X2, Y2, ListaCache2, ListPixOut));
+    (verificadorCrop(Pixel, X1, Y1, X2, Y2) ->
+    (insertarPrincipio(Pixel, ListaCache, ListaCache2), cropPix(CDR, X1, Y1, X2, Y2, ListaCache2, ListPixOut))
+    ;
     cropPix(CDR, X1, Y1, X2, Y2, ListaCache, ListPixOut)),
     !.
 % Verificador de pixel individual
 verificadorCrop(Pixel, X1, Y1, X2, Y2):-
-    pixbitd(PosX, PosY, _, _, Pixel),
+    getPosPix(Pixel, [PosX, PosY]),
     X1 =< PosX,
     Y1 =< PosY,
     X2 >= PosX,
@@ -232,13 +242,23 @@ rgbAhex(Num,Hex):-
     index(ParteDec, HEX2, ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","F"]),
     atom_concat(HEX1, HEX2, Hex).
 % ----------------------------------------------------------------
-% Histograma de una imagen
-imageToHistogram(Image, Histograma):-
-    image(_, _, Pixeles, Image),
-    getContenidoPix(Pixeles, [], ContenidoPix),
-    getAparicionesPix(Pixeles, [], ListaApariciones),
-    histogramador(ContenidoPix, ListaApariciones, [], Histograma),
-    !.
+% Lista con los pixeles filtrado
+getContPixHist([], ListaCache, ListaCache).
+getContPixHist([Pixel|CDR], ListaCache, ListaContenido):-
+    getContenidoPix(Pixel, Contenido),
+    %If
+    (not(member(Contenido, ListaCache)) ->  
+    (insertarPrincipio(Contenido, ListaCache, ListaCache2), getContPixHist(CDR, ListaCache2, ListaContenido))
+    ;   
+    %Else
+    getContPixHist(CDR, ListaCache, ListaContenido)).
+
+% Lista con todas las apariciones de los pixeles de la imagen
+getAparicionesPix([], ListaCache, ListaCache).
+getAparicionesPix([Pixel|CDR], ListaCache, ListaContenido):-
+    getContenidoPix(Pixel, Contenido),
+    insertarPrincipio(Contenido, ListaCache, ListaCache2),
+    getAparicionesPix(CDR, ListaCache2, ListaContenido).
 
 histogramador([], _, ListaCache, ListaCache).
 histogramador([PixelEvaluado|CDR], ListaApariciones, ListaCache, Histograma):-
@@ -248,40 +268,33 @@ histogramador([PixelEvaluado|CDR], ListaApariciones, ListaCache, Histograma):-
     insertarPrincipio([PixelEvaluado,Repeticiones], ListaCache, ListaCache2),
     histogramador(CDR, ListaApariciones, ListaCache2, Histograma),
     !.
-% Lista con los pixeles filtrado
-getContenidoPix([], ListaCache, ListaCache).
-getContenidoPix([Pixel|CDR], ListaCache, ListaContenido):-
-    %Funciona con PIXBIT (por ahora)
-    pixbitd(_, _, Bit, _, Pixel),
-    %If
-    (not(member(Bit, ListaCache)) ->  
-    (insertarPrincipio(Bit, ListaCache, ListaCache2), getContenidoPix(CDR, ListaCache2, ListaContenido))
-    ;   
-    %Else
-    getContenidoPix(CDR, ListaCache, ListaContenido)).
-% Lista con todas las apariciones de los pixeles
-getAparicionesPix([], ListaCache, ListaCache).
-getAparicionesPix([Pixel|CDR], ListaCache, ListaContenido):-
-    %Funciona con PIXBIT (por ahora)
-    pixbitd(_, _, Bit, _, Pixel), 
-    insertarPrincipio(Bit, ListaCache, ListaCache2),
-    getAparicionesPix(CDR, ListaCache2, ListaContenido).
+% Histograma de una imagen
+imageToHistogram(Image, Histograma):-
+    image(_, _, Pixeles, Image),
+    getContPixHist(Pixeles, [], ContenidoPix),
+    getAparicionesPix(Pixeles, [], ListaApariciones),
+    histogramador(ContenidoPix, ListaApariciones, [], Histograma),
+    !.
 % ----------------------------------------------------------------
+% Recursion interna para rotar imagen
+% Se sigue la formula (X,Y) -> (Y, (Area - X))'
+rotador90Pixeles([], ListaCache, ListaCache, _).
+rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
+    getPosPix(Pixel, [PosX, _]),
+    getContenidoPix(Pixel, Contenido),
+    getDepthPix(Pixel, Depth),
+    NewPosY is Area - PosX,
+    unir([PosX, NewPosY, Contenido, Depth], NewPixel),
+    insertarPrincipio(NewPixel, ListaCache, ListaCache2),
+    rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area),
+    !.
+
 % Rotar una imagen en 90 grados de forma cartesiana en sentido horario
 imageRotate90(Image, NewImage):-
     image(Largo, Ancho, Pixeles, Image),
     Area is Largo*Ancho,
     rotador90Pixeles(Pixeles, [], PixelesRotados, Area),
     image(Largo, Ancho, PixelesRotados, NewImage).
-% Se sigue la formula (X,Y) -> (Y, (Area - X))'
-rotador90Pixeles([], ListaCache, ListaCache, _).
-rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
-    pixbitd(PosX, PosY, Bit, Depth, Pixel),
-    NewPosY is Area - PosX,
-    pixbitd(PosY, NewPosY, Bit, Depth, NewPixel),
-    insertarPrincipio(NewPixel, ListaCache, ListaCache2),
-    rotador90Pixeles(CDR, ListaCache2, PixelesRotados, Area),
-    !.
 % ----------------------------------------------------------------
 % Formato de imagen comprimida
 imagenComprimida(Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades, [Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades]).
@@ -293,8 +306,8 @@ compareAvg(X,  [_,A1], [_,A2]) :-
 % Recursion interna para comprimir los pixeles
 comprimir([], _, ListaCache, ListaCache).
 comprimir([Pixel|CDR], PixelFrecuente, ListaCache, PixelesComprimidos):-
-    pixbitd(_,_,Bit,_,Pixel),
-    (Bit == PixelFrecuente ->
+    getContenidoPix(Pixel, Contenido),
+    (Contenido == PixelFrecuente ->
     comprimir(CDR, PixelFrecuente, ListaCache, PixelesComprimidos)
     ;   
     (insertarPrincipio(Pixel, ListaCache, ListaCache2), comprimir(CDR, PixelFrecuente, ListaCache2, PixelesComprimidos))), !.

@@ -321,3 +321,21 @@ imageCompress(Image, ImagenComprimida):-
     comprimir(Pixeles, PixelFrecuente, [], PixelesComprimidos),
     imagenComprimida(Largo, Ancho, PixelesComprimidos, PixelFrecuente, FrecuenciaPix, ImagenComprimida).
 % ----------------------------------------------------------------
+% Recursion interna del modificador
+modificador([], _, ListaCache, ListaCache).
+modificador([PixelOriginal|CDR], PixelAModificar, ListaCache, NewPixeles):-
+    getPosPix(PixelOriginal, PosPixelOriginal),
+    getPosPix(PixelAModificar, PosPixelAModificar),
+    (PosPixelOriginal == PosPixelAModificar ->  
+    (insertarPrincipio(PixelAModificar, ListaCache, ListaCache2), modificador(CDR, PixelAModificar, ListaCache2, NewPixeles))
+    ;   
+    (insertarPrincipio(PixelOriginal, ListaCache, ListaCache2), modificador(CDR, PixelAModificar, ListaCache2, NewPixeles))),
+    !.
+    
+
+% Parte principal de modificar
+imageChangePixel(Image, PixelAModificar, NewImage):-
+    image(Largo, Ancho, Pixeles, Image),
+    modificador(Pixeles, PixelAModificar, [], NewPixeles),
+    image(Largo, Ancho, NewPixeles, NewImage).
+% ----------------------------------------------------------------

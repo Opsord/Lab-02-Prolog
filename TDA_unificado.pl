@@ -339,3 +339,11 @@ imageChangePixel(Image, PixelAModificar, NewImage):-
     modificador(Pixeles, PixelAModificar, [], NewPixeles),
     image(Largo, Ancho, NewPixeles, NewImage).
 % ----------------------------------------------------------------
+% Parte principal del "inversor"
+imageInvertColorRGB(PixRGB, NewPixRGB):-
+    pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
+    NewR is abs(255 - R),
+    NewG is abs(255 - G),
+    NewB is abs(255 - B),
+    pixrgbd(PosX, PosY, NewR, NewG, NewB, Depth, NewPixRGB).
+% ----------------------------------------------------------------

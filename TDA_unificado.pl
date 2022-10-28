@@ -1,7 +1,7 @@
 %-----------------------------------------------------------------
 % Operaciones simples
 
-% Calcular el largo de una lista
+% Calcular el Alto de una lista
 contar([],0).
 contar([_|Resto], N) :- 
     contar(Resto, Acumulador),
@@ -56,6 +56,18 @@ getDepthPix(Pixel, Depth):-
     pixrgbd(_, _, _, _, _, Depth, Pixel)
     ;   
     pixhexd(_, _, _, Depth, Pixel).
+
+
+% Dar vuelta una lista
+% Recursion interna
+inversor([], ListaCache, ListaCache).
+inversor([CAR|CDR], ListaCache, ListaFinal):-
+    insertarPrincipio(CAR, ListaCache, ListaCache2),
+    inversor(CDR, ListaCache2, ListaFinal),
+    !.
+% Consulta principal
+reverse(ListaOriginal, ListaInvertida):-
+    inversor(ListaOriginal, [], ListaInvertida).
 %-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]
@@ -88,7 +100,7 @@ pixhexd(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
     integer(Depth).
 % ----------------------------------------------------------------
 % Constructor de imagen
-image(Largo, Ancho, Pixeles, [Largo, Ancho, Pixeles]).
+image(Alto, Largo, Pixeles, [Alto, Largo, Pixeles]).
 % ----------------------------------------------------------------
 % Recursion interna del verificador
 pixelsAreBitmap([]).
@@ -134,8 +146,8 @@ imageIsHexmap(Image):-
 % Verificador de comprimido
 imageIsCompressed(Image):-
     image(X, Y, Pixeles, Image),
-    contar(Pixeles, Largo),
-    not(Largo  =:= (X*Y)).
+    contar(Pixeles, Alto),
+    not(Alto  =:= (X*Y)).
 % ----------------------------------------------------------------
 % Caso base
 flipHPixeles(_, [], PixsBase, PixsBase).
@@ -291,13 +303,13 @@ rotador90Pixeles([Pixel|CDR], ListaCache, PixelesRotados, Area):-
 
 % Rotar una imagen en 90 grados de forma cartesiana en sentido horario
 imageRotate90(Image, NewImage):-
-    image(Largo, Ancho, Pixeles, Image),
-    Area is Largo*Ancho,
+    image(Alto, Largo, Pixeles, Image),
+    Area is Alto*Largo,
     rotador90Pixeles(Pixeles, [], PixelesRotados, Area),
-    image(Largo, Ancho, PixelesRotados, NewImage).
+    image(Alto, Largo, PixelesRotados, NewImage).
 % ----------------------------------------------------------------
 % Formato de imagen comprimida
-imagenComprimida(Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades, [Largo, Ancho, Pixeles, PixelComprimido, ListaProfundidades]).
+imagenComprimida(Alto, Largo, Pixeles, PixelComprimido, ListaProfundidades, [Alto, Largo, Pixeles, PixelComprimido, ListaProfundidades]).
 % Metodo para ordenar el histograma y colocar primero la mayor frecuencia
 sortHistogram(Histogram, SortedHistogram):-
     predsort(compareAvg, Histogram, SortedHistogram).
@@ -313,13 +325,13 @@ comprimir([Pixel|CDR], PixelFrecuente, ListaCache, PixelesComprimidos):-
     (insertarPrincipio(Pixel, ListaCache, ListaCache2), comprimir(CDR, PixelFrecuente, ListaCache2, PixelesComprimidos))), !.
 % Parte principal de comprimir
 imageCompress(Image, ImagenComprimida):-
-    image(Largo, Ancho, Pixeles, Image),
+    image(Alto, Largo, Pixeles, Image),
     %image(_, _, Pixeles, Image),
     imageToHistogram(Image,Histogram),
     %sortHistogram(Histogram, [[PixelFrecuente|FrecuenciaPix]|CDR]),
     sortHistogram(Histogram, [[PixelFrecuente|FrecuenciaPix]|_]),
     comprimir(Pixeles, PixelFrecuente, [], PixelesComprimidos),
-    imagenComprimida(Largo, Ancho, PixelesComprimidos, PixelFrecuente, FrecuenciaPix, ImagenComprimida).
+    imagenComprimida(Alto, Largo, PixelesComprimidos, PixelFrecuente, FrecuenciaPix, ImagenComprimida).
 % ----------------------------------------------------------------
 % Recursion interna del modificador
 modificador([], _, ListaCache, ListaCache).
@@ -335,11 +347,11 @@ modificador([PixelOriginal|CDR], PixelAModificar, ListaCache, NewPixeles):-
 
 % Parte principal de modificar
 imageChangePixel(Image, PixelAModificar, NewImage):-
-    image(Largo, Ancho, Pixeles, Image),
+    image(Alto, Largo, Pixeles, Image),
     modificador(Pixeles, PixelAModificar, [], NewPixeles),
-    image(Largo, Ancho, NewPixeles, NewImage).
+    image(Alto, Largo, NewPixeles, NewImage).
 % ----------------------------------------------------------------
-% Parte principal del "inversor"
+% Parte principal del "inversor" de color
 imageInvertColorRGB(PixRGB, NewPixRGB):-
     pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
     NewR is abs(255 - R),
@@ -347,3 +359,21 @@ imageInvertColorRGB(PixRGB, NewPixRGB):-
     NewB is abs(255 - B),
     pixrgbd(PosX, PosY, NewR, NewG, NewB, Depth, NewPixRGB).
 % ----------------------------------------------------------------
+% Recursion interna
+convPixString([], StringCache, _, StringCache).
+convPixString([Pixel|CDR], StringCache, TopeImage, StringPixeles):-
+    getPosPix(Pixel, [_, PosY]),
+    getContenidoPix(Pixel, ContPixel),
+    (PosY == (TopeImage - 1) ->  
+    (atomics_to_string(ContPixel, " ", PreString1), atom_concat("/n", PreString1, String))
+    ;   
+    atomics_to_string(ContPixel, " ", PreString2), atom_concat("/t", PreString2, String)),
+    atom_concat(String, StringCache, StringCache2),
+    convPixString(CDR, StringCache2, TopeImage, StringPixeles),
+    !.
+
+% Llamado principal
+imageToString(Image, String):-
+    image(_, Largo, Pixeles, Image),
+    reverse(Pixeles, PixToString),
+    convPixString(PixToString, "", Largo, String).

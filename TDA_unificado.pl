@@ -35,27 +35,27 @@ frecuenciaElementoEnLista(Elemento, [CAR|CDR], Frecuencia, Resultado):-
 
 % Obtiene la posicion de culquier tipo de pixel
 getPosPix(Pixel, Posicion):-
-    (pixbitd(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
+    (pixbit(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
     ;   
-    (pixrgbd(PosX, PosY, _, _, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
+    (pixrgb(PosX, PosY, _, _, _, _, Pixel) ->  unir([PosX,PosY], Posicion)
     ;   
-    (pixhexd(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)))).
+    (pixhex(PosX, PosY, _, _, Pixel) ->  unir([PosX,PosY], Posicion)))).
 
 % Obtiene el contenido de cualquier tipo de pixel
 getContenidoPix(Pixel, Contenido):-
-    (pixbitd(_, _, Bit, _, Pixel) ->  unir(Bit, Contenido)
+    (pixbit(_, _, Bit, _, Pixel) ->  unir(Bit, Contenido)
     ;   
-    (pixrgbd(_, _, R, G, B, _, Pixel) ->  unir([R,G,B], Contenido)
+    (pixrgb(_, _, R, G, B, _, Pixel) ->  unir([R,G,B], Contenido)
     ;   
-    (pixhexd(_, _, Hex, _, Pixel) ->  unir(Hex, Contenido)))).
+    (pixhex(_, _, Hex, _, Pixel) ->  unir(Hex, Contenido)))).
 
 % Obtiene la profunidad de cualqueir tipo de pixel
 getDepthPix(Pixel, Depth):-
-    pixbitd(_, _, _, Depth, Pixel)
+    pixbit(_, _, _, Depth, Pixel)
     ;   
-    pixrgbd(_, _, _, _, _, Depth, Pixel)
+    pixrgb(_, _, _, _, _, Depth, Pixel)
     ;   
-    pixhexd(_, _, _, Depth, Pixel).
+    pixhex(_, _, _, Depth, Pixel).
 
 
 % Dar vuelta una lista
@@ -71,7 +71,7 @@ reverse(ListaOriginal, ListaInvertida):-
 %-----------------------------------------------------------------
 % Pixbit
 % [PosX, PosY, Bit, Depth]
-pixbitd(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
+pixbit(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
     integer(PosX),
     integer(PosY),
     integer(Bit),
@@ -80,7 +80,7 @@ pixbitd(PosX, PosY, Bit, Depth,[PosX, PosY, Bit, Depth]):-
 % ----------------------------------------------------------------
 % Pixrgb
 % [PosX, PosY, R, G, B, Depth]
-pixrgbd(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
+pixrgb(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
     integer(PosX),
     integer(PosY),
     integer(R),
@@ -93,7 +93,7 @@ pixrgbd(PosX, PosY, R, G, B, Depth,[PosX, PosY, R, G, B, Depth]):-
 % ----------------------------------------------------------------
 % Pixhex
 % [PosX, PosY, Hex, Depth]
-pixhexd(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
+pixhex(PosX, PosY, Hex, Depth,[PosX, PosY, Hex, Depth]):-
     integer(PosX),
     integer(PosY),
     string(Hex),
@@ -104,21 +104,21 @@ image(Alto, Largo, Pixeles, [Alto, Largo, Pixeles]).
 % ----------------------------------------------------------------
 % Recursion interna del verificador
 pixelsAreBitmap([]).
-pixelsAreBitmap([Pixbitd | CDR]) :-
-    pixbitd(_, _, Bit, _, Pixbitd),
+pixelsAreBitmap([Pixel|CDR]) :-
+    pixbit(_, _, Bit, _, Pixel),
     (Bit == 0 ; Bit == 1),
     pixelsAreBitmap(CDR),
     !.
          
 % Verificador Bitmap
 imageIsBitmap(Image):-
-    image(_,_,Pixeles,Image),
+    image(_, _, Pixeles, Image),
     pixelsAreBitmap(Pixeles).
 % ----------------------------------------------------------------
 % Recursion interna del verificador
 pixelsArePixmap([]).
-pixelsArePixmap([Pixrgbd | CDR]):-
-    pixrgbd(_, _, R, G, B, _, Pixrgbd),
+pixelsArePixmap([Pixel|CDR]):-
+    pixrgb(_, _, R, G, B, _, Pixel),
     R >= 0 , R =< 255,
     G >= 0 , G =< 255,
     B >= 0 , B =< 255,
@@ -127,20 +127,20 @@ pixelsArePixmap([Pixrgbd | CDR]):-
 
 % Verificador Pixmap
 imageIsPixmap(Image):-
-    image(_,_,Pixeles,Image),
+    image(_, _, Pixeles, Image),
     pixelsArePixmap(Pixeles).
 % ----------------------------------------------------------------
 % Recursion interna del verificador
 pixelsAreHexmap([]).
-pixelsAreHexmap([Pixhexd | CDR]) :-
-    pixhexd(_, _, ContHex, _, Pixhexd),
+pixelsAreHexmap([Pixel|CDR]) :-
+    pixhex(_, _, ContHex, _, Pixel),
     string(ContHex),
     pixelsAreHexmap(CDR),
     !.
 
 % Verificador Hexmap
 imageIsHexmap(Image):-
-    image(_,_,Pixeles,Image),
+    image(_, _, Pixeles, Image),
     pixelsAreHexmap(Pixeles).
 % ----------------------------------------------------------------
 % Verificador de comprimido
@@ -237,7 +237,7 @@ conversorRGBaHEX([PixRGB|CDR], ListaCache, ListPixOut):-
     !.
 % Conversor de argumento RGB a HEX
 conversorIndividualRGBaHEX(PixRGB,PixHEX):-
-    pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
+    pixrgb(PosX, PosY, R, G, B, Depth, PixRGB),
     rgbAhex(R,HexR),
     rgbAhex(G,HexG),
     rgbAhex(B,HexB),
@@ -245,7 +245,7 @@ conversorIndividualRGBaHEX(PixRGB,PixHEX):-
     atom_concat(HEXCache, HexB, HEX),
     atom_concat("#", HEX, HexPreFinal),
     atom_string(HexPreFinal, HexFinal),
-    pixhexd(PosX, PosY, HexFinal, Depth, PixHEX).
+    pixhex(PosX, PosY, HexFinal, Depth, PixHEX).
 % Conversor de numero a HEX
 rgbAhex(Num,Hex):-
     ParteEntera is truncate(Num/16),
@@ -353,27 +353,37 @@ imageChangePixel(Image, PixelAModificar, NewImage):-
 % ----------------------------------------------------------------
 % Parte principal del "inversor" de color
 imageInvertColorRGB(PixRGB, NewPixRGB):-
-    pixrgbd(PosX, PosY, R, G, B, Depth, PixRGB),
+    pixrgb(PosX, PosY, R, G, B, Depth, PixRGB),
     NewR is abs(255 - R),
     NewG is abs(255 - G),
     NewB is abs(255 - B),
-    pixrgbd(PosX, PosY, NewR, NewG, NewB, Depth, NewPixRGB).
+    pixrgb(PosX, PosY, NewR, NewG, NewB, Depth, NewPixRGB).
 % ----------------------------------------------------------------
-% Recursion interna
-convPixString([], StringCache, _, StringCache).
-convPixString([Pixel|CDR], StringCache, TopeImage, StringPixeles):-
-    getPosPix(Pixel, [_, PosY]),
-    getContenidoPix(Pixel, ContPixel),
-    (PosY == (TopeImage - 1) ->  
-    (atomics_to_string(ContPixel, " ", PreString1), atom_concat("/n", PreString1, String))
+% Transformador a string
+pixToString(Pixel, StringContenido):-
+    getContenidoPix(Pixel, Contenido),
+    (integer(Contenido) ->  
+    atom_string(Contenido, StringContenido)
     ;   
-    atomics_to_string(ContPixel, " ", PreString2), atom_concat("/t", PreString2, String)),
-    atom_concat(String, StringCache, StringCache2),
-    convPixString(CDR, StringCache2, TopeImage, StringPixeles),
+    (string(Contenido) ->  
+    unir(Contenido, StringContenido)
+    ;   
+    atomics_to_string(Contenido, " ", StringContenido))).
+% Recursion interna    
+convPixString([], _, _, StringCache, StringCache).
+convPixString([Pixel|CDR], Contador, TopeImagen, StringCache, StringPixeles):-
+    pixToString(Pixel, StringContenido),
+    (Contador == 0 ->  
+    (atom_concat("\n", StringContenido, PreString1), NewContador is TopeImagen)
+    ;   
+    (atom_concat("\t", StringContenido, PreString1), NewContador is Contador - 1)),
+    atom_concat( PreString1, StringCache, StringCache2),
+    convPixString(CDR, NewContador, TopeImagen, StringCache2, StringPixeles),
     !.
 
 % Llamado principal
 imageToString(Image, String):-
     image(_, Largo, Pixeles, Image),
-    reverse(Pixeles, PixToString),
-    convPixString(PixToString, "", Largo, String).
+    reverse(Pixeles, ReversedPix),
+    convPixString(ReversedPix, 1, Largo, "", String).
+% ----------------------------------------------------------------

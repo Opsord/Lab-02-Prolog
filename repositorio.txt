@@ -1,0 +1,2 @@
+Link al repositorio de Github:
+https://github.com/Opsord/Lab-02-Prolog

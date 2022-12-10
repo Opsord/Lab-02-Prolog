@@ -51,7 +51,7 @@ Easiest option:
 
 -> Clone the project
 
--> Open [SWISH](https://swish.swi-prolog.org/)(online Prolog) (allows step by step debugging)
+-> Open [SWISH](https://swish.swi-prolog.org/)(online Prolog and allows step by step debugging)
 
 -> Copy all the content of "All in one ADT.pl"
 

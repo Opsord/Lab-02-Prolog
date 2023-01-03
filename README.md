@@ -68,7 +68,7 @@ Easiest option:
 Check the other versions of S.I.E. in different paradigms!
 
 - [Scheme Version](https://github.com/Opsord/Simple_Image_Editor-Scheme) | (13/20) Implemented features | Functional paradigm.
-- [Java Version](https://github.com/Opsord/Lab-03-Java) | (20/20) Implemented features | Objet oriented paradigm.
+- [Java Version](https://github.com/Opsord/Simple_Image_Editor-Java)) | (20/20) Implemented features | Objet oriented paradigm.
 ## Author
 
 - [@Opsord](https://www.github.com/Opsord)
